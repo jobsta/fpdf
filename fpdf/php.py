@@ -18,21 +18,18 @@ def print_r(array):
     for k, v in array.items():
         print("[%s] => %s " % (k, v))
         
-def UTF8ToUTF16BE(instr, setbom=True):
-    "Converts UTF-8 strings to UTF16-BE."
-    outstr = "".encode()
+def StrToUTF16BE(instr, setbom=True):
+    "Converts string to UTF16-BE."
+    outstr = b''
     if (setbom):
-        outstr += "\xFE\xFF".encode("latin1")
+        outstr += b'\xFE\xFF'
     if not isinstance(instr, unicode):
         instr = instr.decode('UTF-8')
     outstr += instr.encode('UTF-16BE')
-    # convert bytes back to fake unicode string until PEP461-like is implemented
-    if PY3K:
-        outstr = outstr.decode("latin1")
     return outstr
 
-def UTF8StringToArray(instr):
-    "Converts UTF-8 strings to codepoints array"
+def StringToArray(instr):
+    "Converts string to codepoints array"
     return [ord(c) for c in instr]
 
 # ttfints php helpers:    
