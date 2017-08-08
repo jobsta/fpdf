@@ -31,11 +31,13 @@ Installation Instructions:
 
 You can install PyFPDF from PyPI, with easyinstall or from Windows
 installers. For example, using pip:
+
 .. code:: shell
 
    pip install reportbro-fpdf
 
 To get the latest development version you can download the source code running:
+
 .. code:: shell
 
    git clone https://github.com/jobsta/pyfpdf.git
