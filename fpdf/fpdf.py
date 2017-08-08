@@ -2,9 +2,9 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.1                                                          *
+# * Version:  1.7.3                                                          *
 # * Date:     2010-09-10                                                     *
-# * Last update: 2012-08-16                                                  *
+# * Last update: 2017-08-08                                                  *
 # * License:  LGPL v3.0                                                      *
 # *                                                                          *
 # * Original Author (PHP):  Olivier PLATHEY 2004-12-31                       *
@@ -27,7 +27,7 @@ from .php import substr, sprintf, print_r, StrToUTF16BE, StringToArray
 from .py3k import PY3K, pickle, urlopen, BytesIO, Image, basestring, unicode, exception, b, hashpath
 
 # Global variables
-FPDF_VERSION = '1.7.2'
+FPDF_VERSION = '1.7.3'
 FPDF_FONT_DIR = os.path.join(os.path.dirname(__file__),'font')
 FPDF_CACHE_MODE = 0 # 0 - in same folder, 1 - none, 2 - hash
 FPDF_CACHE_DIR = None
