@@ -4,8 +4,8 @@ pyfpdf: FPDF for Python
 This is a fork of the PyFPDF library and fixes unicode issues. It allows usage
 of non-latin-1 characters (e.g. Euro sign €) in Python 3. This is possible
 by internally using a bytearray output buffer instead of a string (and should
-also be more efficient). This library is used by reportbro-lib
-(see [ReportBro][2]).
+also be more efficient). This library is used by [reportbro-lib][2]
+(see [ReportBro][3]).
 
 PyFPDF is a library for PDF document generation under Python, ported from PHP
 (see [FPDF][1]: "Free"-PDF, a well-known PDFlib-extension replacement with many
@@ -15,7 +15,8 @@ Compared with other PDF libraries, PyFPDF is simple, small and versatile, with
 advanced capabilities, and is easy to learn, extend and maintain.
 
   [1]: http://www.fpdf.org/
-  [2]: https://www.reportbro.com/
+  [2]: https://github.com/jobsta/reportbro-lib/
+  [3]: https://www.reportbro.com/
 
 Features:
 ---------
