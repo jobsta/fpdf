@@ -2,9 +2,9 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.3                                                          *
+# * Version:  1.7.4                                                          *
 # * Date:     2010-09-10                                                     *
-# * Last update: 2017-08-08                                                  *
+# * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
 # *                                                                          *
 # * Original Author (PHP):  Olivier PLATHEY 2004-12-31                       *
@@ -992,20 +992,21 @@ class FPDF(object):
             self.cell(l/1000.0*self.font_size,h,substr(s,j),0,0,'',0,link)
 
     @check_page
-    def image(self, name, x=None, y=None, w=0,h=0,type='',link='', is_mask=False, mask_image=None):
+    def image(self, name, x=None, y=None, w=0,h=0,type='',link='', is_mask=False, mask_image=None,
+            image_fp=None, halign=None, valign=None):
         "Put an image on the page"
         if not name in self.images:
             #First use of image, get info
-            if(type==''):
-                pos=name.rfind('.')
-                if(not pos):
+            if type == '':
+                pos = name.rfind('.')
+                if pos == -1:
                     self.error('image file has no extension and no type was specified: '+name)
-                type=substr(name,pos+1)
-            type=type.lower()
-            if(type=='jpg' or type=='jpeg'):
-                info=self._parsejpg(name)
-            elif(type=='png'):
-                info=self._parsepng(name)
+                type = substr(name, pos+1)
+            type = type.lower()
+            if type in ('jpg', 'jpeg'):
+                info = self._parsejpg(name, image_fp)
+            elif(type == 'png'):
+                info = self._parsepng(name, image_fp)
             else:
                 #Allow for additional formats
                 #maybe the image is not showing the correct extension,
@@ -1015,7 +1016,7 @@ class FPDF(object):
                 parsing_functions = [self._parsejpg,self._parsepng,self._parsegif]
                 for pf in parsing_functions:
                     try:
-                        info = pf(name)
+                        info = pf(name, image_fp)
                         succeed_parsing = True
                         break
                     except:
@@ -1048,6 +1049,32 @@ class FPDF(object):
             w=h*info['w']/info['h']
         elif(h==0):
             h=w*info['h']/info['w']
+
+        if halign or valign:
+            # horizontal and vertical alignment of image within given width and height
+            # by keeping original image aspect ratio
+            image_width, image_height = info['w'], info['h']
+            if image_width <= w and image_height <= h:
+                image_display_width, image_display_height = image_width, image_height
+            else:
+                size_ratio = image_width / image_height
+                tmp = w / size_ratio
+                if tmp <= h:
+                    image_display_width = w
+                    image_display_height = tmp
+                else:
+                    image_display_width = h * size_ratio
+                    image_display_height = h
+            if halign == 'C':  # center
+                x += (w - image_display_width) / 2
+            elif halign == 'R':  # right
+                x += w - image_display_width
+            if valign in ('C', 'M'):  # center/middle
+                y += (h - image_display_height) / 2
+            elif valign == 'B':  # bottom
+                y += h - image_display_height
+            w, h = image_display_width, image_display_height
+
         # Flowing mode
         if y is None:
             if (self.y + h > self.page_break_trigger and not self.in_footer and self.accept_page_break()):
@@ -1768,11 +1795,11 @@ class FPDF(object):
         else:
             self.error("Unknown resource loading reason \"%s\"" % reason)
 
-    def _parsejpg(self, filename):
+    def _parsejpg(self, filename, image_fp=None):
         # Extract info from a JPEG file
         f = None
         try:
-            f = self.load_resource("image", filename)
+            f = image_fp if image_fp else self.load_resource("image", filename)
             while True:
                 markerHigh, markerLow = struct.unpack('BB', f.read(2))
                 if markerHigh != 0xFF or markerLow < 0xC0:
@@ -1804,12 +1831,12 @@ class FPDF(object):
             data = f.read()
         return {'w':width,'h':height,'cs':colspace,'bpc':bpc,'f':'DCTDecode','data':data}
 
-    def _parsegif(self, filename):
+    def _parsegif(self, filename, image_fp=None):
         # Extract info from a GIF file (via PNG conversion)
         if Image is None:
             self.error('PIL is required for GIF support')
         try:
-            im = Image.open(filename)
+            im = Image.open(image_fp if image_fp else filename)
         except Exception:
             self.error('Missing or incorrect image file: %s. error: %s' % (filename, str(exception())))
         else:
@@ -1825,9 +1852,9 @@ class FPDF(object):
             os.unlink(tmp)
         return info
 
-    def _parsepng(self, filename):
+    def _parsepng(self, filename, image_fp=None):
         #Extract info from a PNG file
-        f = self.load_resource("image", filename)
+        f = image_fp if image_fp else self.load_resource("image", filename)
         #Check signature
         magic = f.read(8).decode("latin1")
         signature = '\x89'+'PNG'+'\r'+'\n'+'\x1a'+'\n'
@@ -1915,10 +1942,9 @@ class FPDF(object):
                     color += b(data[pos])
                     alpha += b(data[pos])
                     line = substr(data, pos+1, length)
-                    re_c = re.compile('(.).'.encode("ascii"), flags=re.DOTALL)
-                    re_a = re.compile('.(.)'.encode("ascii"), flags=re.DOTALL)
-                    color += re_c.sub(lambda m: m.group(1), line)
-                    alpha += re_a.sub(lambda m: m.group(1), line)
+                    for x in range(0, length, 2):
+                        color += line[x:x+1]
+                        alpha += line[x+1:x+2]
             else:
                 # RGB image
                 length = 4*w
@@ -1927,10 +1953,9 @@ class FPDF(object):
                     color += b(data[pos])
                     alpha += b(data[pos])
                     line = substr(data, pos+1, length)
-                    re_c = re.compile('(...).'.encode("ascii"), flags=re.DOTALL)
-                    re_a = re.compile('...(.)'.encode("ascii"), flags=re.DOTALL)
-                    color += re_c.sub(lambda m: m.group(1), line)
-                    alpha += re_a.sub(lambda m: m.group(1), line)
+                    for x in range(0, length, 4):
+                        color += line[x:x+3]
+                        alpha += line[x+3:x+4]
             del data
             data = zlib.compress(color)
             info['smask'] = zlib.compress(alpha)

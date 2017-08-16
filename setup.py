@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 # Always prefer setuptools over distutils
 from setuptools import setup
-from codecs import open
-from os import path
-from fpdf import __version__
+import re
 
 package_dir = 'fpdf'
 
-here = path.abspath(path.dirname(__file__))
+def read(path):
+    """Read a file's contents."""
+    with open(path, 'r') as f:
+        return f.read()
 
-# Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+version = re.findall(r"Version:\s*(\d+.\d+.\d+)", read('./fpdf/fpdf.py'))[0]
 
 if __name__ == '__main__':
     setup(name='reportbro-fpdf',
-          version=__version__,
+          version=version,
           description='Simple PDF generation for Python',
-          long_description=long_description,
+          long_description=read('./README.rst'),
           author='Olivier PLATHEY ported by Max',
           author_email='maxpat78@yahoo.it',
           maintainer="Alex Hartmann",
