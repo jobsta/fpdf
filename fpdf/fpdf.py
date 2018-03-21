@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.4                                                          *
+# * Version:  1.7.5                                                          *
 # * Date:     2010-09-10                                                     *
 # * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
@@ -873,7 +873,16 @@ class FPDF(object):
             if self.unifontsubset:
                 l += self.get_string_width(c, True) / self.font_size*1000.0
             else:
-                l += cw.get(c,0)
+                if ord(c) < 128:
+                    l += cw.get(c,0)
+                else:
+                    encoded_chars = c.encode(self.core_fonts_encoding)
+                    if PY3K:
+                        for byte_val in encoded_chars:
+                            l += cw.get(chr(byte_val), 0)
+                    else:
+                        for ch in encoded_chars:
+                            l += cw.get(ch, 0)
             if(l>wmax):
                 #Automatic line break
                 if(sep==-1):
