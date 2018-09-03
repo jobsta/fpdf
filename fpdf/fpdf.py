@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.5                                                          *
+# * Version:  1.7.6                                                          *
 # * Date:     2010-09-10                                                     *
 # * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
@@ -1905,7 +1905,7 @@ class FPDF(object):
         #Scan chunks looking for palette, transparency and image data
         pal=''
         trns=''
-        data=bytes() if PY3K else str()
+        data=bytearray() if PY3K else str()
         n=1
         while n != None:
             n=self._freadint(f)
@@ -1941,8 +1941,8 @@ class FPDF(object):
         if(ct>=4):
             # Extract alpha channel
             data = zlib.decompress(data)
-            color = b('')
-            alpha = b('')
+            color = bytearray() if PY3K else b('')
+            alpha = bytearray() if PY3K else b('')
             if(ct==4):
                 # Gray image
                 length = 2*w
