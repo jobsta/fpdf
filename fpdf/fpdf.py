@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.6                                                          *
+# * Version:  1.7.7                                                          *
 # * Date:     2010-09-10                                                     *
 # * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
@@ -1447,8 +1447,8 @@ class FPDF(object):
                 # A specification of the mapping from CIDs to glyph indices
                 cidtogidmap = bytearray(256*256*2)
                 for cc, glyph in codeToGlyph.items():
-                    cidtogidmap[cc*2] = chr(glyph >> 8)
-                    cidtogidmap[cc*2 + 1] = chr(glyph & 0xFF)
+                    cidtogidmap[cc*2] = (glyph >> 8)
+                    cidtogidmap[cc*2 + 1] = (glyph & 0xFF)
                 cidtogidmap = zlib.compress(bytes(cidtogidmap))
                 self._newobj()
                 self._out(b'<</Length %d' % len(cidtogidmap))
@@ -1994,7 +1994,7 @@ class FPDF(object):
         self._out(b'endstream')
 
     def _out(self, s):
-        assert isinstance(s, bytes)
+        assert isinstance(s, (bytes, bytearray))
         # Add a line to the document
         if(self.state == 2):
             self.pages[self.page]["content"] += (s + b"\n")
