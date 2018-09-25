@@ -666,7 +666,12 @@ class TTFontFile:
                     cmapstr += pack(">H", cm) 
                 else:
                     try:
-                        cmapstr += pack(">h", cm) 
+                        # check range to avoid warning for certain characters/fonts (e.g. with Firefly)
+                        # see https://github.com/reingart/pyfpdf/issues/36
+                        if -32768 <= cm <= 32767:
+                            cmapstr += pack(">h", cm)
+                        else:
+                            cmapstr += pack(">H", -cm)
                     except:
                         warnings.warn("cmap value too big/small: %s" % cm)
                         cmapstr += pack(">H", -cm) 

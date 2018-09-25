@@ -4,7 +4,7 @@
 "FPDF for python"
 
 __license__ = "LGPL 3.0"
-__version__ = "1.7.5"
+__version__ = "1.7.8"
 
 from .fpdf import FPDF, FPDF_FONT_DIR, FPDF_VERSION, SYSTEM_TTFONTS, set_global, FPDF_CACHE_MODE, FPDF_CACHE_DIR
 try:
