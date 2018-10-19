@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.8                                                          *
+# * Version:  1.7.9                                                          *
 # * Date:     2010-09-10                                                     *
 # * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
@@ -27,7 +27,7 @@ from .php import substr, sprintf, print_r, StrToUTF16BE, StringToArray
 from .py3k import PY3K, pickle, urlopen, BytesIO, Image, basestring, unicode, exception, b, hashpath
 
 # Global variables
-FPDF_VERSION = '1.7.8'
+FPDF_VERSION = '1.7.9'
 FPDF_FONT_DIR = os.path.join(os.path.dirname(__file__),'font')
 FPDF_CACHE_MODE = 0 # 0 - in same folder, 1 - none, 2 - hash
 FPDF_CACHE_DIR = None
@@ -1238,7 +1238,7 @@ class FPDF(object):
                             h = h_pt
                         annots += sprintf(b'/Dest [%d 0 R /XYZ 0 %.2f null]>>',
                             1 + 2 * l[0], h - l[1] * self.k)
-                self._out(annots + ']')
+                self._out(annots + b']')
             if self.pdf_version > '1.3':
                 self._out(b"/Group <</Type /Group /S /Transparency"\
                     b"/CS /DeviceRGB>>")
