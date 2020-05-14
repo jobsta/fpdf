@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 # ****************************************************************************
 # * Software: FPDF for python                                                *
-# * Version:  1.7.9                                                          *
+# * Version:  1.7.10                                                         *
 # * Date:     2010-09-10                                                     *
 # * Last update: 2017-08-16                                                  *
 # * License:  LGPL v3.0                                                      *
@@ -27,7 +27,7 @@ from .php import substr, sprintf, print_r, StrToUTF16BE, StringToArray
 from .py3k import PY3K, pickle, urlopen, BytesIO, Image, basestring, unicode, exception, b, hashpath
 
 # Global variables
-FPDF_VERSION = '1.7.9'
+FPDF_VERSION = '1.7.10'
 FPDF_FONT_DIR = os.path.join(os.path.dirname(__file__),'font')
 FPDF_CACHE_MODE = 0 # 0 - in same folder, 1 - none, 2 - hash
 FPDF_CACHE_DIR = None
@@ -97,6 +97,7 @@ class FPDF(object):
             'timesI': 'Times-Italic', 'timesBI': 'Times-BoldItalic',
             'symbol': 'Symbol', 'zapfdingbats': 'ZapfDingbats'}
         self.core_fonts_encoding = "latin-1"
+        self.encode_error_handling = "strict"
         # Scale factor
         if unit == "pt":
             self.k = 1
@@ -238,6 +239,10 @@ class FPDF(object):
         "Set document option"
         if opt == "core_fonts_encoding":
             self.core_fonts_encoding = value
+        elif opt == "encode_error_handling":
+            if value not in ('strict', 'ignore', 'replace'):
+                self.error("Invalid value for \"encode_error_handling\" option")
+            self.encode_error_handling = value
         else:
             self.error("Unknown document option \"%s\"" % str(opt))
 
@@ -390,7 +395,7 @@ class FPDF(object):
                 else:
                     w += 500
         else:
-            s = s.encode(self.core_fonts_encoding)
+            s = s.encode(self.core_fonts_encoding, self.encode_error_handling)
             if PY3K:
                 for byte_val in s:
                     w += cw.get(chr(byte_val), 0)
@@ -686,7 +691,7 @@ class FPDF(object):
             for uni in StringToArray(txt):
                 self.current_font['subset'].append(uni)
         else:
-            txt2 = self._escape(txt.encode(self.core_fonts_encoding))
+            txt2 = self._escape(txt.encode(self.core_fonts_encoding, self.encode_error_handling))
         s=sprintf(b'BT %.2f %.2f Td (%s) Tj ET',x*self.k,(self.h-y)*self.k, txt2)
         if(self.underline and txt!=''):
             s+=b' '+self._dounderline(x,y,txt)
@@ -789,7 +794,7 @@ class FPDF(object):
                     for uni in StringToArray(txt):
                         self.current_font['subset'].append(uni)
                 else:
-                    txt2 = self._escape(txt.encode(self.core_fonts_encoding))
+                    txt2 = self._escape(txt.encode(self.core_fonts_encoding, self.encode_error_handling))
                 s += sprintf(b'BT %.2f %.2f Td (%s) Tj ET',(self.x+dx)*k,(self.h-(self.y+.5*h+.3*self.font_size))*k,txt2)
 
             if(self.underline):
@@ -876,7 +881,7 @@ class FPDF(object):
                 if ord(c) < 128:
                     l += cw.get(c,0)
                 else:
-                    encoded_chars = c.encode(self.core_fonts_encoding)
+                    encoded_chars = c.encode(self.core_fonts_encoding, self.encode_error_handling)
                     if PY3K:
                         for byte_val in encoded_chars:
                             l += cw.get(chr(byte_val), 0)
