@@ -937,6 +937,125 @@ class FPDF(object):
             ret.append(substr(s,j,i-j))
         return ret
 
+    def split_text(self, first_w, w, txt, align_justify=False):
+        """
+        Optimized version of `multi_cell` with `split_only=True` to split a text into lines.
+        :param first_w: width of first line
+        :param w: line width except first one (set with first_w)
+        :param txt: text to split
+        :param align_justify: if True the text will be justified
+        :return: Array of tuples with (str, int) where each tuple represents a text line
+        and the text width
+        """
+        txt = self.normalize_text(txt)
+        ret = []
+        cw = self.current_font['cw']
+        w_max = (w - 2*self.c_margin) * 1000.0 / self.font_size
+        if first_w != w:
+            current_w_max = (first_w - 2*self.c_margin) * 1000.0 / self.font_size
+            append_to_line = True  # first text line will be appended to existing line
+        else:
+            current_w_max = w_max
+            append_to_line = False
+        size_factor = self.font_size / 1000.0
+        s = txt.replace("\r", '')
+        nb = len(s)
+        if nb > 0 and s[nb-1] == '\n':
+            nb -= 1
+        sep = -1
+        i = 0
+        j = 0
+        l = 0
+        l_after_sep = 0
+        ns = 0 # number of spaces
+        nl = 1
+        while i < nb:
+            # Get next character
+            c = s[i]
+            if c == '\n':
+                # Explicit line break
+                if self.ws > 0:
+                    self.ws = 0
+                ret.append((substr(s, j, i-j), l * size_factor))
+                i += 1
+                sep = -1
+                j = i
+                l = 0
+                l_after_sep = 0
+                ns = 0
+                nl += 1
+                if first_w != w:
+                    current_w_max = w_max
+                    append_to_line = False
+                continue
+            if c==' ':
+                sep = i
+                l_after_sep = 0
+                ls = l
+                ns += 1
+
+            if self.unifontsubset:
+                char = ord(c)
+                if len(cw) > char:
+                    char_w = cw[char]
+                elif self.current_font['desc']['MissingWidth']:
+                    char_w = self.current_font['desc']['MissingWidth']
+                else:
+                    char_w = 500
+            else:
+                if ord(c) < 128:
+                    char_w = cw.get(c,0)
+                else:
+                    char_w = 0
+                    encoded_chars = c.encode(self.core_fonts_encoding, self.encode_error_handling)
+                    if PY3K:
+                        for byte_val in encoded_chars:
+                            char_w += cw.get(chr(byte_val), 0)
+                    else:
+                        for ch in encoded_chars:
+                            char_w += cw.get(ch, 0)
+            l_after_char = l + char_w
+            if l_after_char > current_w_max:
+                # Automatic line break
+                if sep == -1:
+                    if append_to_line:
+                        # appending text (without any whitespaces so far) to existing line
+                        # does not fit -> try again with new line
+                        ret.append(('', 0))
+                        i = 0
+                    else:
+                        if i == j:
+                            i += 1
+                        if self.ws > 0:
+                            self.ws=0
+                        # text is too long but there was no separator -> add all chars which fit into line
+                        ret.append((substr(s, j, i-j), l * size_factor))
+                else:
+                    if align_justify:
+                        if ns > 1:
+                            self.ws = (current_w_max - ls) * size_factor / (ns-1)
+                        else:
+                            self.ws = 0
+                    # add text until last separator
+                    ret.append((substr(s, j, sep-j), (l - l_after_sep) * size_factor))
+                    i = sep + 1
+                sep = -1
+                j = i
+                l = 0
+                l_after_sep = 0
+                ns = 0
+                nl += 1
+                if first_w != w:
+                    current_w_max = w_max
+                    append_to_line = False
+            else:
+                l = l_after_char
+                l_after_sep += char_w
+                i += 1
+        # Last chunk
+        ret.append((substr(s, j, i-j), l  * size_factor ))
+        return ret
+
     @check_page
     def write(self, h, txt='', link=''):
         "Output text in flowing mode"
