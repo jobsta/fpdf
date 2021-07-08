@@ -944,8 +944,8 @@ class FPDF(object):
         :param w: line width except first one (set with first_w)
         :param txt: text to split
         :param align_justify: if True the text will be justified
-        :return: Array of tuples with (str, int) where each tuple represents a text line
-        and the text width
+        :return: Array of tuples with (str, int, bool) where each tuple represents a text line, text width
+        and a flag if there is a forced new line at the end.
         """
         txt = self.normalize_text(txt)
         ret = []
@@ -960,8 +960,6 @@ class FPDF(object):
         size_factor = self.font_size / 1000.0
         s = txt.replace("\r", '')
         nb = len(s)
-        if nb > 0 and s[nb-1] == '\n':
-            nb -= 1
         sep = -1
         i = 0
         j = 0
@@ -976,7 +974,7 @@ class FPDF(object):
                 # Explicit line break
                 if self.ws > 0:
                     self.ws = 0
-                ret.append((substr(s, j, i-j), l * size_factor))
+                ret.append((substr(s, j, i-j), l * size_factor, True))
                 i += 1
                 sep = -1
                 j = i
@@ -988,7 +986,7 @@ class FPDF(object):
                     current_w_max = w_max
                     append_to_line = False
                 continue
-            if c==' ':
+            if c == ' ':
                 sep = i
                 l_after_sep = 0
                 ls = l
@@ -1021,7 +1019,7 @@ class FPDF(object):
                     if append_to_line:
                         # appending text (without any whitespaces so far) to existing line
                         # does not fit -> try again with new line
-                        ret.append(('', 0))
+                        ret.append(('', 0, False))
                         i = 0
                     else:
                         if i == j:
@@ -1029,7 +1027,7 @@ class FPDF(object):
                         if self.ws > 0:
                             self.ws=0
                         # text is too long but there was no separator -> add all chars which fit into line
-                        ret.append((substr(s, j, i-j), l * size_factor))
+                        ret.append((substr(s, j, i-j), l * size_factor, False))
                 else:
                     if align_justify:
                         if ns > 1:
@@ -1037,7 +1035,7 @@ class FPDF(object):
                         else:
                             self.ws = 0
                     # add text until last separator
-                    ret.append((substr(s, j, sep-j), (l - l_after_sep) * size_factor))
+                    ret.append((substr(s, j, sep-j), (l - l_after_sep) * size_factor, False))
                     i = sep + 1
                 sep = -1
                 j = i
@@ -1053,7 +1051,8 @@ class FPDF(object):
                 l_after_sep += char_w
                 i += 1
         # Last chunk
-        ret.append((substr(s, j, i-j), l  * size_factor ))
+        if i > j:
+            ret.append((substr(s, j, i-j), l * size_factor, False))
         return ret
 
     @check_page
